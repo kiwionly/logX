@@ -1,0 +1,49 @@
+<!-- 
+*   LogX_SamplePage VF page demostrate how to debug html page value to real time console log.
+*
+*   Date       Person   Responsible Details 
+*   12/11/2014    kiwi    created.
+*
+-->
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" controller="LogX_WebLogger"> <!-- included this as controller or extension -->
+
+<!-- included logger.js no Jquery dependency -->
+<apex:includeScript value="{!URLFOR($Resource.LogX_Console, 'js/logger.js')}"/>
+
+<style>  
+
+body {
+    margin: 20px;
+}
+
+.title {
+    font-size: 16px;
+}
+
+</style>
+
+<apex:includeScript value="{!URLFOR($Resource.LogX_Console, 'js/jquery-2.1.1.min.js')}"/>
+
+
+
+<div>
+    <div id="title">This is an example to show how to use Web Logger.</div>
+    <br></br>
+    Enter value to be log : <input type="text" id="textField" value=""></input>
+    
+    <button type="button" id="log">Log</button>
+</div>
+
+<script>
+    
+$( document ).ready(function() {
+    
+    $("#log").click(function() {
+        Logger.debug('kiwi', $("#textField").val());
+    });
+    
+});
+
+</script>
+
+</apex:page>

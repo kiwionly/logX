@@ -1,0 +1,206 @@
+<!-- 
+*   LogX_Console VF page show realtime debug log from LogX_RealTimeLogger.
+*
+*   Date       Person   Responsible Details 
+*   11/11/2014    kiwi    created.
+*
+-->
+<apex:page showHeader="false" sidebar="false" standardStylesheets="false" >
+
+<apex:stylesheet value="{!URLFOR($Resource.LogX_Console, 'css/normalize.css')}"/>
+<apex:stylesheet value="{!URLFOR($Resource.LogX_Console, 'css/bootstrap.min.css')}"/>
+<style>    
+body {
+    padding-top: 70px;
+}
+
+.console {
+    width: 100%;
+    height: 600px;      
+}
+
+#panel {
+    margin: 20px 0px;   
+}
+
+textarea.form-control {
+    height: 600px;
+}
+
+</style>
+
+<apex:includeScript value="{!URLFOR($Resource.LogX_Console, 'org/cometd.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.LogX_Console, 'js/jquery-2.1.1.min.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.LogX_Console, 'js/jquery.cookie.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.LogX_Console, 'js/jquery.cometd.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.LogX_Console, 'js/bootstrap.min.js')}"/>
+    
+<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="login.do">Salesforce Logging</a>
+        </div>          
+    </div>
+</nav>
+    
+    <div class="container">
+    
+        <div id="panel">
+        
+            <form class="form-inline" role="form">
+    
+                <div class="form-group">
+                    <label class="sr-only" for="application">Application Name</label> 
+                    <input type="text" class="form-control" id="application" placeholder="Enter Application Name" value=""></input>
+                </div>
+                
+                <div class="form-group">
+                    <label class="sr-only" for="tag">Tag</label> 
+                    <input type="text" class="form-control" id="tag" placeholder="Enter Tag" value=""></input>
+                </div>
+                
+                <button type="submit" class="btn btn-default" id="subscribe">Subscribe</button>
+                
+                <button type="button" class="btn btn-default" id="clear">Clear</button>
+    
+            </form>
+    
+        </div>
+        
+        <textarea class="form-control console" id="log" spellcheck="false"></textarea>
+
+    </div>
+    
+  
+<script>var token = '{!$Api.Session_ID}';</script>
+<script>
+
+var LoggerConsole = (function(){
+
+    var cometd = $.cometd;
+    
+    var appValue = '';
+    var tagValue = '';
+    
+    var initialize = function()
+    {
+        $("#subscribe").click(function() {
+            
+            appValue = $("#application").val();
+            tagValue = $("#tag").val();
+            
+            $("#application").prop("disabled", true);
+            $("#tag").prop("disabled", true);
+            
+            subscribe();
+            
+            return false;
+        });
+        
+        $("#clear").click(function() {
+            $("#log").empty();
+            
+            return false;
+        });
+    }
+    
+    var filter = function(obj)
+    {
+        var app = obj.Name;
+        var tag = obj.Tag__c;
+
+        if(tag == null)
+            tag = "";
+
+        if(appValue == app && tagValue == tag)
+            return true;
+        
+        return false;
+    }
+    
+    var format = function(obj)
+    {
+        var clazz = obj.Class__c;
+        var LogLevel = obj.LogLevel;
+        var app = obj.Name;
+        var message = obj.message__c;
+        var date = obj.CreatedDate;
+        var tag = obj.Tag__c;
+        
+        var msg = date + " : " + clazz + " : " + tag + " : " + message;
+        
+        return msg;
+    }
+    
+    var subscribe = function()
+    {
+        cometd.websocketEnabled = false; // Salesforce not yet supported web socket 
+    
+        var cometdURL = location.protocol + '//' + location.host + '/cometd/32.0';
+        var auth = 'OAuth ' + token;
+        
+        cometd.configure({
+            url: cometdURL,
+            requestHeaders: { Authorization: auth}
+        });
+        
+        cometd.handshake(function(handshakeReply)
+        {
+            console.log(handshakeReply);
+        
+            if (handshakeReply.successful)
+            {  
+                cometd.subscribe('/topic/LogX',
+                
+                    function(message) 
+                    {
+                        var obj = message.data.sobject;
+                    
+                        if(filter(obj))
+                        {
+                            var me = format(obj);
+                            $("#log").append(me + "\n");
+                            
+                            //console.log(obj);
+                        }
+                    }, 
+                    
+                    function(subscribeReply) 
+                    {
+                        if (subscribeReply.successful)
+                        {
+                            $("#log").append("connect : " + subscribeReply.successful + "\n");
+                            
+                            console.log(subscribeReply);
+                        }
+                    }
+                );
+            }
+            else
+            {
+                // Cannot handshake with the server, alert user.
+                alert('handshake fail, call admin.');
+            }
+        });
+        
+        $("#subscribe").off('click');
+    }
+    
+    return {
+   
+        init: function()
+        {
+            initialize();
+        }
+    };
+    
+})();
+
+$( document ).ready(function() {
+    LoggerConsole.init();
+});
+
+
+</script>
+
+</apex:page>

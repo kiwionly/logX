@@ -1,0 +1,15 @@
+<apex:page controller="LogX_HelloController" standardStylesheets="false" showHeader="false" sidebar="false" action="{!process}">
+
+  <h1>{!message}</h1>
+  
+  <p>This page run a method in action tag "process()" which call the logger.debug()</p>
+  
+  <p>1) Go to console log page <a href="apex/LogX_console" target="_blank">here</a></p> 
+  
+  <p>2) use "application" for application name and "tag" for tag name as a value and hit subscribe</p>
+  
+  <p>3) Refresh this page, you should able to see the log "hello world".</p>
+  
+  <p>View sample source code for how to use the logger.</p>
+  
+</apex:page>
