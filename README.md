@@ -1,11 +1,6 @@
 # logX
 LogX is a logging library for Salesforce. 
 
-LogX
------
-LogX is a logging library for salesforce.
-
-
 Why you want logX ?
 ---------------------------
 Let say you want to turn on System.debug() only in staging, but want to turn it off in production because it hurt performance or security reason.
